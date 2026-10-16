@@ -64,7 +64,7 @@ async def main():
         await pg.locator(".trace details summary").first.click()
         await shot("18_ask_encore", None, None, None, 800)
         await shot("19_what_qloo_saw", "/qloo", "text=Most recent requests")
-        await shot("20_how_it_works_results", "/how", "text=Data and limits", "h2:has-text('Encore against a model')", 1000)
+        await shot("20_how_it_works_results", "/how", "text=Data and privacy", "h2:has-text('Encore against a model')", 1000)
         await shot("21_activity_record", "/record/r-tomasz", "text=Participation and response")
         dark = await b.new_context(viewport={"width": 1500, "height": 1000}, device_scale_factor=2, color_scheme="dark")
         pg = await dark.new_page()

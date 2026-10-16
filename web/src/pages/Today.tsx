@@ -259,7 +259,7 @@ export default function Today() {
           </div>
           {pending.map((r) => (
             <p key={r.id}>
-              {r.first_name}’s family named a favourite Qloo could not match on its own.{" "}
+              {r.first_name}’s family named a favourite with more than one match in Qloo.{" "}
               <Link to={`/residents/${r.id}#favourites`}>Choose the right one</Link>
             </p>
           ))}

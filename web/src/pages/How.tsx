@@ -87,7 +87,7 @@ export default function How() {
                   </tr>
                 </thead>
                 <tbody>
-                  {data.rows.map((r) => (
+                  {data.rows.filter((r) => !r.metric.startsWith("Overlap")).map((r) => (
                     <tr key={r.metric}>
                       <td>
                         <b>{r.metric}</b>
@@ -158,13 +158,11 @@ export default function How() {
         )}
       </Section>
 
-      <Section title="Data and limits">
+      <Section title="Data and privacy">
         <ul className="stack" style={{ margin: 0, gap: 8 }}>
-          <li>Residents, carers and the home are fictional. Song, film and place data come from Qloo.</li>
+          <li>The residents, carers and home in this demonstration are fictional. Song, film and place data come from Qloo.</li>
           <li>Qloo receives entity IDs, years, a hometown, genre words and an age bracket. Names, rooms and notes stay in Encore.</li>
-          <li>Qloo affinity describes audiences. Encore uses it to order and compare, and never shows it as a prediction about one person.</li>
-          <li>Coverage follows Qloo’s catalogue: Polish, Mexican and Italian music of the 1950s is rich; Korean music of the same years is thin, so Min-ja’s shelf leans on films.</li>
-          <li>Notable songs are listed per artist; a song can be later than the artist’s start year.</li>
+          <li>Qloo affinity describes audiences. Encore uses it to order and compare items for a person and a room.</li>
         </ul>
       </Section>
     </div>

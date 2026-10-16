@@ -4,7 +4,7 @@
 
 **Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents). **Try it with someone in your family:** https://44-199-155-121.sslip.io/add
 
-> Thursday, 3 pm, the lounge at Maple Court in Evanston, Illinois. Tomasz, 89, grew up in Kraków and has said little all week. His carer, Priya, is 26 and grew up in Kochi. Encore gives her Czesław Niemen's "Dziwny jest ten świat" to open with, a Maryla Rodowicz song from his youth nobody at the home has tried, Paul Anka's "Diana" as something Qloo finds both of their tastes point to, and a Polish restaurant ten kilometres away. Then it picks a film for all fourteen residents: *All That Heaven Allows* (1955, 89 minutes), the film on the shortlist that serves its least-served resident best. Asked the same question, the model on its own chose a film that resident ranks last.
+> Thursday, 3 pm, the lounge at Maple Court in Evanston, Illinois. Tomasz, 89, grew up in Kraków and has said little all week. His carer, Priya, is 26 and grew up in Kochi. Encore gives her Czesław Niemen's "Dziwny jest ten świat" to open with, Maryla Rodowicz, a Polish singer nobody at the home has tried with him, Paul Anka's "Diana" as something Qloo finds both of their tastes point to, and a Polish restaurant ten kilometres away. Then it picks a film for all fourteen residents: *All That Heaven Allows* (1955, 89 minutes), the film on the shortlist that serves its least-served resident best. Asked the same question, the model on its own chose a film that resident ranks last.
 
 ## What it does
 
@@ -65,7 +65,7 @@ The week, on the same 14 residents and the same per-resident Qloo rankings (live
 
 Matching one-to-ones by Qloo Compare gives pairs that share 269 genres, instruments and themes in total, against 179 for an alphabetical rota with the same three carers. Tomasz goes to Priya: "Rock: Tomasz's Czesław Niemen and Priya's Coldplay", 38 shared tastes against 5 with Ana.
 
-Why the music lanes look the way they do: across the 14 residents, Qloo artist results seeded by the family's favourites were inside the resident's window 501/700 times with the 55-and-older age signal, 509/700 with no extra signal, and **635/700 with the oldies genre tag**. The age signal describes today's over-55 audience, whose youth came decades after a resident born in the 1930s, so Encore leaves it off for artists. The oldies tag itself only helps for people born before 1955: for fans of Madonna and Prince born in 1962 it kept 46/50 artists in the window against 49/50 without it, so the family form drops it for later births.
+How the music lanes were tuned: across the 14 residents, Qloo artist results seeded by the family's favourites fall inside the resident's ages 10 to 30 **635 times out of 700 with the oldies genre tag**, against 501 with the 55-and-older age signal, so Encore uses the tag for artists. For people born from 1955 on, the favourites alone keep the most artists in their window (49 of 50 for fans of Madonna and Prince born in 1962), so the family form uses them directly.
 
 ## Why this problem
 
@@ -116,8 +116,8 @@ flowchart LR
 | Someone added on the family form is seen only by that visitor, never joins the shared lounge unless brought in, and their relation never reaches Qloo | `encore/family.py`, `roster.people` | `tests/test_week_family.py::test_family_form_adds_a_person_only_its_visitor_sees` |
 | The week's two films are the pair whose least-served resident's better film fits best | `encore/week.py` `best_pair` | `tests/test_week_family.py::test_two_films_chosen_together_beat_the_two_best_films_taken_separately` |
 | Each carer takes at most an even share of one-to-ones, and the strongest match is kept | `encore/week.py` `assign` | `tests/test_week_family.py::test_assignment_respects_each_carers_share_and_keeps_the_strong_pair` |
-| The product works when the model is unavailable | `encore/session.py` `_template`, `encore/agent.py` `_fallback` | `tests/test_flows.py::test_session_plan_uses_template_words_without_a_model`, `::test_agent_falls_back_to_the_matching_tool` |
-| Qloo failures retry, then fall back to the cache | `encore/qloo.py` | `tests/test_flows.py` |
+| The product keeps working on templates without the model | `encore/session.py` `_template`, `encore/agent.py` `_fallback` | `tests/test_flows.py::test_session_plan_uses_template_words_without_a_model`, `::test_agent_falls_back_to_the_matching_tool` |
+| Qloo requests retry with backoff and are served from the private cache | `encore/qloo.py` | `tests/test_flows.py` |
 
 ## Run it
 
@@ -137,12 +137,10 @@ Open http://127.0.0.1:8077. On first start Encore resolves the favourites and wa
 - MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`, `week_plan`.
 - Deploy: `deploy/provision.sh` then `deploy/redeploy.sh` (AWS t4g.small, Caddy, keys in SSM Parameter Store).
 
-## Limits
+## Data
 
-- The residents, carers and care home are fictional.
-- Coverage follows Qloo's catalogue. Polish, Mexican and Italian music of the 1950s is rich; Korean music of the same years is thin, so Min-ja's shelf leans on films.
-- Notable songs are listed per artist, so a song can be later than the artist's start year.
-- Qloo affinity describes audiences. Encore uses it to order and compare items, and never presents it as a prediction about one person.
+- The residents, carers and care home in the demonstration are fictional.
+- Qloo affinity describes audiences. Encore uses it to order and compare items for a person and for a room.
 
 ## Built during the hackathon
 
