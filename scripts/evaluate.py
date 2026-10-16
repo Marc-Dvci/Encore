@@ -155,7 +155,7 @@ async def main() -> None:
         {"metric": "Films released in the resident's ages 10 to 30", "encore": pct(*t["enc_mov_win"]),
          "llm_only": pct(*t["llm_mov_win"]), "note": "Qloo's release year against the window."},
         {"metric": "Films from the resident's home country", "encore": pct(*t["enc_mov_home"]),
-         "llm_only": pct(*t["llm_mov_home"]), "note": "Qloo's release country; all 14 residents, including the 6 who grew up in the US."},
+         "llm_only": pct(*t["llm_mov_home"]), "note": "Qloo's release country; all 14 residents, including the 5 who grew up in the US."},
         {"metric": "Overlap between residents' film lists", "encore": f"{jaccard_mean(enc_sets['movie']):.3f}",
          "llm_only": f"{jaccard_mean(llm_sets['movie']):.3f}", "note": "Mean pairwise Jaccard over 91 pairs; lower means more personal."},
         {"metric": "Overlap between residents' singer lists", "encore": f"{jaccard_mean(enc_sets['artist']):.3f}",
