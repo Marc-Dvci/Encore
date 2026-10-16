@@ -39,6 +39,8 @@ TOOLS: list[dict] = [
      "parameters": {"type": "OBJECT", "properties": {"resident": {"type": "STRING"}, "carer": {"type": "STRING"}}, "required": ["resident", "carer"]}},
     {"name": "common_ground", "description": "Tastes a resident and a carer share according to Qloo, and an artist and film from the resident's youth both point to.",
      "parameters": {"type": "OBJECT", "properties": {"resident": {"type": "STRING"}, "carer": {"type": "STRING"}}, "required": ["resident", "carer"]}},
+    {"name": "week_plan", "description": "The week's programme for the residents present: two lounge films chosen together so every resident gets one that fits, a music hour, and who sits with whom for each one-to-one (carers matched by shared tastes from Qloo Compare).",
+     "parameters": {"type": "OBJECT", "properties": {}}},
     {"name": "recent_reactions", "description": "What staff recorded in recent sessions for one resident.",
      "parameters": {"type": "OBJECT", "properties": {"resident": {"type": "STRING"}}, "required": ["resident"]}},
 ]
@@ -52,7 +54,7 @@ class Agent:
         if not name:
             raise NotFound("nobody named")
         n = roster.norm(name)
-        for p in self.enc.store.q("SELECT id, first_name, kind FROM people"):
+        for p in self.enc.store.q("SELECT id, first_name, kind FROM people WHERE owner IS NULL"):
             if (n in (roster.norm(p["id"]), roster.norm(p["first_name"]))) and (not kind or p["kind"] == kind):
                 return self.enc.person(p["id"])
         raise NotFound(f"no {kind or 'person'} called {name}")
@@ -103,6 +105,16 @@ class Agent:
             cg = await e.common(r["id"], c["id"])
             out = {"shared": [s["name"] for s in cg["shared"]], "bridges": [f"{b['name']} ({b['type']}, {b['year']})" for b in cg["bridges"]]}
             return out, {"kind": "common", **cg}
+        if name == "week_plan":
+            w = await e.week()
+            pr = w["films"].get("pair") or {}
+            out = {"films": [f"{f['name']} ({f['year']})" for f in pr.get("films", [])],
+                   "least_served_with_two_films": pr.get("floor"),
+                   "least_served_with_one_film": (w["films"].get("single") or {}).get("floor"),
+                   "one_to_ones": [f"{o['day']}: {o['resident']['first_name']} with {o['carer']['first_name']}"
+                                   + (f" (share {', '.join(o['shared'][:2])})" if o["shared"] else "") for o in w["one_to_ones"]],
+                   "shared_taste_total": w["pairing"]["chosen_total"], "alphabetical_rota_total": w["pairing"]["rota_total"]}
+            return out, {"kind": "week", **w}
         if name == "recent_reactions":
             r = self._find(args.get("resident"), "resident")
             rows = e.store.q("SELECT at, entity_name, reaction FROM reactions WHERE person_id=? ORDER BY id DESC LIMIT 12", (r["id"],))
@@ -151,7 +163,7 @@ class Agent:
     async def _fallback(self, message: str, visitor: Optional[str], trace: list[dict], cards: list[dict],
                         why: str) -> dict:
         m = message.lower()
-        names = [p["first_name"] for p in self.enc.store.q("SELECT first_name FROM people")]
+        names = [p["first_name"] for p in self.enc.store.q("SELECT first_name FROM people WHERE owner IS NULL")]
         mentioned = [n for n in names if re.search(r"\b" + re.escape(n.lower()) + r"\b", m)]
         carers = {p["first_name"] for p in self.enc.store.q("SELECT first_name FROM people WHERE kind='carer'")}
         res_names = [n for n in mentioned if n not in carers]
@@ -160,6 +172,8 @@ class Agent:
             name, args = "plan_one_to_one", {"resident": res_names[0], "carer": car_names[0]}
         elif res_names and car_names:
             name, args = "common_ground", {"resident": res_names[0], "carer": car_names[0]}
+        elif re.search(r"week|rota|monday|schedule", m):
+            name, args = "week_plan", {}
         elif re.search(r"music|song|playlist|sing", m):
             name, args = "music_hour", {}
         elif re.search(r"film|movie|lounge|watch", m):
@@ -181,6 +195,10 @@ def _template_answer(name: str, r: dict) -> str:
     if name == "lounge_film" and r.get("pick"):
         return (f"{r['pick']} ({r['year']}, {r['minutes']} min). Its least-served resident is {r['least_served']} "
                 f"with a fit of {r['least_served_fit']:.2f}, against an average of {r['average_fit']:.2f}.")
+    if name == "week_plan":
+        return (f"This week: {' and '.join(r['films'])}. With both, the least-served resident's better film fits at "
+                f"{r['least_served_with_two_films']}, against {r['least_served_with_one_film']} with one film. "
+                + "; ".join(r["one_to_ones"][:5]) + ".")
     if name == "music_hour":
         return "Music hour: " + "; ".join(r["playlist"][:8]) + "."
     if name == "plan_one_to_one":

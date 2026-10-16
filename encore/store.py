@@ -15,7 +15,7 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS people (
   id TEXT PRIMARY KEY, kind TEXT NOT NULL, first_name TEXT NOT NULL, last_initial TEXT,
   birth_year INTEGER NOT NULL, city TEXT, country TEXT, demonym TEXT, cuisine TEXT, music_genre TEXT, languages TEXT,
-  room TEXT, present INTEGER NOT NULL DEFAULT 1, care_note TEXT, family_note TEXT, portrait TEXT
+  room TEXT, present INTEGER NOT NULL DEFAULT 1, care_note TEXT, family_note TEXT, portrait TEXT, owner TEXT
 );
 CREATE TABLE IF NOT EXISTS favourites (
   id INTEGER PRIMARY KEY AUTOINCREMENT, person_id TEXT NOT NULL, label TEXT NOT NULL, kind TEXT NOT NULL,
@@ -54,6 +54,9 @@ class Store:
         self.db.row_factory = sqlite3.Row
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.executescript(SCHEMA)
+        cols = {r[1] for r in self.db.execute("PRAGMA table_info(people)")}
+        if "owner" not in cols:  # databases created before visitors could add someone
+            self.db.execute("ALTER TABLE people ADD COLUMN owner TEXT")
 
     def q(self, sql: str, args: Iterable[Any] = ()) -> list[dict]:
         with self._lock:

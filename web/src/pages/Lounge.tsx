@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import type { Candidate } from "../api";
 import { Art, ErrorBox, Loading, PlayLinks, Section, fitColor, fitInk, useFetch, useTip } from "../ui";
 
@@ -35,21 +35,28 @@ export default function Lounge() {
           </p>
         </div>
         <div className="toggle" role="tablist">
-          <button role="tab" aria-selected={tab === "film"} className={tab === "film" ? "on" : ""} onClick={() => setParams({})}>
+          <button role="tab" aria-selected={tab === "film"} className={tab === "film" ? "on" : ""} onClick={() => setParams(params.get("add") ? { add: params.get("add")! } : {})}>
             Film
           </button>
-          <button role="tab" aria-selected={tab === "music"} className={tab === "music" ? "on" : ""} onClick={() => setParams({ tab: "music" })}>
+          <button role="tab" aria-selected={tab === "music"} className={tab === "music" ? "on" : ""} onClick={() => setParams({ tab: "music", ...(params.get("add") ? { add: params.get("add")! } : {}) })}>
             Music hour
           </button>
         </div>
       </div>
-      {tab === "film" ? <FilmTab minutes={minutes} setMinutes={setMinutes} /> : <MusicTab />}
+      {params.get("add") && (
+        <div className="notice small">
+          Today’s lounge with the person you added in the room. Their fit is computed the same way as every resident’s.{" "}
+          <Link to="/lounge">Back to the home’s lounge</Link>
+        </div>
+      )}
+      {tab === "film" ? <FilmTab minutes={minutes} setMinutes={setMinutes} add={params.get("add")} /> : <MusicTab add={params.get("add")} />}
     </div>
   );
 }
 
-function FilmTab({ minutes, setMinutes }: { minutes: number; setMinutes: (n: number) => void }) {
-  const { data, error, loading, reload } = useFetch<FilmPick>(`/api/lounge?domain=movie&max_minutes=${minutes}`, [minutes]);
+function FilmTab({ minutes, setMinutes, add }: { minutes: number; setMinutes: (n: number) => void; add: string | null }) {
+  const extra = add ? `&add=${encodeURIComponent(add)}` : "";
+  const { data, error, loading, reload } = useFetch<FilmPick>(`/api/lounge?domain=movie&max_minutes=${minutes}${extra}`, [minutes, add]);
   const { node, bind } = useTip();
   if (error) return <ErrorBox error={error} retry={reload} />;
   if (!data) return <Loading label="Asking Qloo to rank the shortlist for each resident…" lines={6} />;
@@ -203,8 +210,8 @@ function dedupe<T extends { name: string }>(xs: T[]) {
   return xs.filter((x) => (seen.has(x.name) ? false : (seen.add(x.name), true)));
 }
 
-function MusicTab() {
-  const { data, error, reload } = useFetch<MusicHour>("/api/lounge?domain=artist");
+function MusicTab({ add }: { add: string | null }) {
+  const { data, error, reload } = useFetch<MusicHour>(`/api/lounge?domain=artist${add ? `&add=${encodeURIComponent(add)}` : ""}`, [add]);
   if (error) return <ErrorBox error={error} retry={reload} />;
   if (!data) return <Loading label="Building the playlist…" lines={6} />;
   return (

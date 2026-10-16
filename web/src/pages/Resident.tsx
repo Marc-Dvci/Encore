@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowRight, Check, FileText, Flag, MapPin, Plus, Quote, ShieldOff, Utensils, X } from "lucide-react";
+import { ArrowRight, Check, Clapperboard, FileText, Flag, MapPin, Plus, Quote, ShieldOff, Trash2, Utensils, X } from "lucide-react";
 import { api, type Home, type Item, type Plan, type Profile } from "../api";
 import { Art, Avatar, EraRibbon, ErrorBox, ItemCard, Loading, PlayLinks, Section, TypeIcon, useFetch } from "../ui";
 
@@ -54,7 +54,8 @@ export default function Resident() {
             <Avatar name={person.first_name} id={person.id} size="lg" />
             <div>
               <h1 style={{ fontSize: "2rem" }}>
-                {person.first_name} {person.last_initial}.
+                {person.first_name}
+                {person.last_initial ? ` ${person.last_initial}.` : ""}
               </h1>
               <div className="ink2">
                 {person.age} · born {person.birth_year}
@@ -65,9 +66,34 @@ export default function Resident() {
             <span className="row tight">
               <MapPin size={15} /> Grew up in {person.city}, {person.country}
             </span>
-            <span className="muted">Speaks {person.languages} · Room {person.room}</span>
+            <span className="muted">
+              Speaks {person.languages}
+              {person.room ? ` · Room ${person.room}` : ""}
+            </span>
           </div>
-          {person.family_note && (
+          {person.guest && (
+            <div className="notice small stack" style={{ gap: 8 }}>
+              <span>
+                You added {person.first_name} with the family form. Only this browser sees this page, and it is removed at the
+                nightly reset.
+              </span>
+              <span className="row tight">
+                <Link className="btn sm" to={`/lounge?add=${person.id}`}>
+                  <Clapperboard size={14} /> Bring {person.first_name} to the lounge
+                </Link>
+                <button
+                  className="btn ghost sm"
+                  onClick={async () => {
+                    await api.del(`/api/people/${person.id}`);
+                    nav("/add");
+                  }}
+                >
+                  <Trash2 size={14} /> Remove
+                </button>
+              </span>
+            </div>
+          )}
+          {!person.guest && person.family_note && (
             <blockquote className="small ink2" style={{ margin: 0, borderLeft: "3px solid var(--line-2)", paddingLeft: 10 }}>
               <Quote size={14} /> {person.family_note}
             </blockquote>

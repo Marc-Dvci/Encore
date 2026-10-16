@@ -1,5 +1,5 @@
 import { NavLink, Route, Routes, Link } from "react-router-dom";
-import { Music2, Sun, Users, Clapperboard, MessageCircle, Eye, Info } from "lucide-react";
+import { Music2, Sun, Users, Clapperboard, MessageCircle, Eye, Info, CalendarDays } from "lucide-react";
 import Today from "./pages/Today";
 import Residents from "./pages/Residents";
 import Resident from "./pages/Resident";
@@ -9,6 +9,8 @@ import Ask from "./pages/Ask";
 import Record from "./pages/Record";
 import QlooLog from "./pages/QlooLog";
 import How from "./pages/How";
+import Week from "./pages/Week";
+import Add from "./pages/Add";
 import { useFetch } from "./ui";
 
 interface Status {
@@ -45,6 +47,9 @@ export default function App() {
             <NavLink to="/lounge">
               <Clapperboard size={16} /> Lounge
             </NavLink>
+            <NavLink to="/week">
+              <CalendarDays size={16} /> This week
+            </NavLink>
             <NavLink to="/ask">
               <MessageCircle size={16} /> Ask Encore
             </NavLink>
@@ -65,6 +70,8 @@ export default function App() {
           <Route path="/session/:id" element={<Session />} />
           <Route path="/lounge" element={<Lounge />} />
           <Route path="/ask" element={<Ask />} />
+          <Route path="/week" element={<Week />} />
+          <Route path="/add" element={<Add />} />
           <Route path="/record/:id" element={<Record />} />
           <Route path="/qloo" element={<QlooLog />} />
           <Route path="/how" element={<How />} />

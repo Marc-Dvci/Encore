@@ -14,6 +14,7 @@ export interface PersonCard {
   needs_input: number;
   last_reaction: { at: string; reaction: string; entity_name: string } | null;
   staff_note: string | null;
+  guest: boolean;
 }
 
 export interface Home {
@@ -26,6 +27,8 @@ export interface Home {
   residents: PersonCard[];
   carers: PersonCard[];
   present: number;
+  relations: string[];
+  countries: string[];
 }
 
 export interface Item {
@@ -121,7 +124,7 @@ export interface Profile {
   person: {
     id: string; kind: string; first_name: string; last_initial: string; birth_year: number; age: number; city: string;
     country: string; demonym: string; languages: string; room: string; present: number; family_note: string | null;
-    care_note: string | null;
+    care_note: string | null; guest: boolean;
   };
   favourites: Favourite[];
   avoid: { id: number; tag_id: string | null; entity_id: string | null; label: string; source: string }[];
@@ -174,10 +177,28 @@ export class ApiError extends Error {
   }
 }
 
+/** A random token this browser keeps, so the people a visitor adds stay visible to them only. */
+export function visitorToken(): string {
+  const make = () => Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
+  try {
+    let t = localStorage.getItem("encore-visitor");
+    if (!t) {
+      t = make();
+      localStorage.setItem("encore-visitor", t);
+    }
+    return t;
+  } catch {
+    const w = window as unknown as { __encoreVisitor?: string };
+    return (w.__encoreVisitor ??= make());
+  }
+}
+
 async function req<T>(method: string, url: string, body?: unknown): Promise<T> {
+  const headers: Record<string, string> = { "x-encore-visitor": visitorToken() };
+  if (body) headers["content-type"] = "application/json";
   const r = await fetch(url, {
     method,
-    headers: body ? { "content-type": "application/json" } : undefined,
+    headers,
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await r.json().catch(() => ({}));

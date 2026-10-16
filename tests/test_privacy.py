@@ -36,6 +36,7 @@ async def test_no_name_or_note_reaches_qloo_across_every_flow(enc, fake):
         await enc.profile(r["id"])
     await enc.lounge("movie")
     await enc.lounge("artist")
+    await enc.week()
     plan = await enc.plan("r-tomasz", "c-priya")
     step = next(s for s in plan["steps"] if s.get("item"))
     await enc.react("r-tomasz", {**step["item"], "type": step["item"].get("type", "artist")}, "lit_up", "c-priya", plan["id"])

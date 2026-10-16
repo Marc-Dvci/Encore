@@ -18,11 +18,12 @@ interface Eval {
 }
 
 const FLOW = [
-  ["Family", "Birth year, hometown and three favourites, typed in a minute."],
+  ["Family", "Birth year, hometown and up to three favourites, typed in a minute on the family form. No name is asked."],
   ["Qloo Search", "Matches each favourite to one entity. When a title has several releases, Encore keeps the one from the resident’s youth; anything ambiguous goes to staff."],
   ["Qloo Insights", "Two lanes per domain: the family’s favourites, and home (country of release, or the home country’s music genre). Films, TV and books are filtered to the years the resident was 10 to 30."],
   ["Encore code", "Checks each artist’s active years against that window, weights by age, interleaves the lanes and removes anything on an avoid list."],
   ["Lounge", "Qloo ranks one shared shortlist for every resident (filter.results.entities). Code picks the film whose least-served resident is served best."],
+  ["The week", "Encore tries every pair of shortlist films and keeps the pair whose least-served resident’s better film fits best. Qloo Compare on every resident and carer pair scores the tastes they share, and each carer gets an even share of one-to-ones, strongest matches first."],
   ["One-to-one", "Qloo Compare and explainability find what a resident and their carer share. Insights on places finds the food of home near the care home."],
   ["Gemini", "Writes the words the carer says. It never chooses an item or a number."],
   ["Session", "A carer taps how the resident responded. A song that lit them up becomes a signal in the next Qloo query; anything that upset them is excluded."],
@@ -44,7 +45,8 @@ export default function How() {
         <p className="ink2">
           US nursing homes must run an activities programme built on each resident’s interests and preferences
           (42 CFR 483.24(c), survey tag F679). Encore produces that programme and its record. See an{" "}
-          <Link to="/record/r-tomasz">example record</Link>.
+          <Link to="/record/r-tomasz">example record</Link>, the <Link to="/week">week’s plan</Link>, or{" "}
+          <Link to="/add">try it with someone in your family</Link>.
         </p>
       </div>
 

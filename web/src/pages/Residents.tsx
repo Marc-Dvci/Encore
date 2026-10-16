@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import type { Home } from "../api";
 import { Avatar, ErrorBox, Loading, useFetch } from "../ui";
 
@@ -13,15 +14,40 @@ export default function Residents() {
           Each profile starts from three things a family can tell you in a minute: the year, the hometown and a few
           favourites. Encore does the rest with Qloo.
         </p>
+        <Link className="btn primary" style={{ alignSelf: "flex-start", marginTop: 6 }} to="/add">
+          <UserPlus size={16} /> Try it with someone in your family
+        </Link>
       </div>
       {error && <ErrorBox error={error} retry={reload} />}
       {!data && !error && <Loading label="Loading the home…" />}
       {data && (
         <>
+          {data.residents.some((r) => r.guest) && (
+            <section className="stack">
+              <h2>You added</h2>
+              <div className="people">
+                {data.residents.filter((r) => r.guest).map((r) => (
+                  <Link key={r.id} to={`/residents/${r.id}`} className="person">
+                    <Avatar name={r.first_name} id={r.id} />
+                    <div className="grow">
+                      <b>{r.first_name}</b>
+                      <div className="small muted">
+                        Born {r.birth_year} · {r.city}
+                      </div>
+                      <div className="tiny ink2" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {r.favourites.join(" · ")}
+                      </div>
+                    </div>
+                    {r.needs_input > 0 && <span className="chip warn">1 to confirm</span>}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
           <section className="stack">
             <h2>Residents</h2>
             <div className="people">
-              {data.residents.map((r) => (
+              {data.residents.filter((r) => !r.guest).map((r) => (
                 <Link key={r.id} to={`/residents/${r.id}`} className="person">
                   <Avatar name={r.first_name} id={r.id} off={!r.present} />
                   <div className="grow">

@@ -34,6 +34,7 @@ const SUGGESTIONS = [
   "Pick the lounge film for today. Nothing over 100 minutes.",
   "Which songs would get Rosa and Giuseppe singing?",
   "Plan a music hour for everyone in the lounge.",
+  "Plan this week: which two films, and who should sit with whom?",
 ];
 
 export default function Ask() {

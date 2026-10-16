@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Sparkles, Clapperboard, Music, HelpCircle, Flag } from "lucide-react";
+import { ArrowRight, Sparkles, Clapperboard, Music, HelpCircle, Flag, UserPlus, CalendarDays } from "lucide-react";
 import { api, type Candidate, type Home, type Plan } from "../api";
 import { Art, Avatar, ErrorBox, Loading, fitColor, fitInk, useFetch, useTip } from "../ui";
 
@@ -30,7 +30,7 @@ export default function Today() {
     const fit: Record<string, number> = {};
     film.data?.pick?.per_resident.forEach((r) => (fit[r.id] = r.pct));
     return home.data.residents
-      .filter((r) => r.present)
+      .filter((r) => r.present && !r.guest)
       .map((r) => ({ r, fit: fit[r.id] ?? 1 }))
       .sort((a, b) => Number(!!b.r.staff_note) - Number(!!a.r.staff_note) || a.fit - b.fit)
       .slice(0, 4);
@@ -73,6 +73,14 @@ export default function Today() {
           Encore has looked up the songs, films and shows of each one's youth with Qloo, and picked an afternoon that
           leaves nobody out.
         </p>
+        <div className="row" style={{ marginTop: 6 }}>
+          <Link className="btn primary" to="/add">
+            <UserPlus size={16} /> Try it with someone in your family
+          </Link>
+          <Link className="btn" to="/week">
+            <CalendarDays size={16} /> Plan the week
+          </Link>
+        </div>
       </div>
 
       {home.error && <ErrorBox error={home.error} retry={home.reload} />}
@@ -84,7 +92,7 @@ export default function Today() {
             <span className="small muted">Tap a resident to mark them in or out; the picks update.</span>
           </div>
           <div className="row" style={{ gap: 8 }}>
-            {h.residents.map((r) => (
+            {h.residents.filter((r) => !r.guest).map((r) => (
               <button
                 key={r.id}
                 className="btn sm"

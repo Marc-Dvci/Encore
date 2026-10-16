@@ -2,12 +2,14 @@
 
 **Encore is a taste agent for care-home activity coordinators.** From a birth year, a hometown and three favourites a family can name in a minute, it uses Qloo to find the songs, films and shows of each resident's youth, plans one-to-one reminiscence sessions a carer can run in ten minutes, and picks the lounge film that leaves no resident out.
 
-**Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents)
+**Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents). **Try it with someone in your family:** https://44-199-155-121.sslip.io/add
 
 > Thursday, 3 pm, the lounge at Maple Court in Evanston, Illinois. Tomasz, 89, grew up in Kraków and has said little all week. His carer, Priya, is 26 and grew up in Kochi. Encore gives her Czesław Niemen's "Dziwny jest ten świat" to open with, a Maryla Rodowicz song from his youth nobody at the home has tried, Paul Anka's "Diana" as something Qloo finds both of their tastes point to, and a Polish restaurant ten kilometres away. Then it picks a film for all fourteen residents: *All That Heaven Allows* (1955, 89 minutes), the film on the shortlist that serves its least-served resident best. Asked the same question, the model on its own chose a film that resident ranks last.
 
 ## What it does
 
+- **The family form.** A visitor tells Encore who someone is to them (Grandma, Dad), the year they were born, where they grew up and up to three favourites. No name is asked. Encore matches the favourites in Qloo, builds the culture of that person's youth, plans a session with a carer and can seat them in today's lounge. The person is visible only to that browser and is removed at the nightly reset.
+- **The week.** Two lounge films chosen as a pair, a music hour, and a one-to-one for each resident with the carer whose tastes Qloo's Compare finds closest, with each carer given an even share.
 - **The culture of a resident's youth.** People remember most from ages 10 to 30, the reminiscence bump. Encore asks Qloo for films, TV and books released in that window, and for artists active in it, in two lanes: the family's favourites, and home (country of release, or the home country's music genre). Code checks every artist's active years, weights each item by the age the resident was, and interleaves the lanes so a man who grew up in Kraków gets Polish songs as well as Hollywood.
 - **One-to-one sessions.** A song the family named, a song from their youth the care team has not tried, a film, something the carer and the resident share, and a taste of home near the care home. Gemini writes the words the carer says ("Tell me about…", never "Do you remember…").
 - **The lounge film.** Each resident nominates films from their own youth; Qloo ranks the whole shortlist for every resident's tastes (`filter.results.entities`); Encore picks the film whose least-served resident is served best, and shows what the highest-average and most-popular choices would cost that resident.
@@ -28,6 +30,7 @@
 | "Qloo links it to Irena Santor" | `feature.explainability` per seed entity | [`taste.shelf`](encore/taste.py) |
 | Rank one shortlist for every resident | `filter.results.entities` + each resident's signals | [`group.affinities`](encore/group.py) |
 | Common ground between a resident and a carer | `/v2/analysis/compare`, plus insights seeded by both whose explainability shows both sides pulling | [`common.common_ground`](encore/common.py) |
+| Match each resident with a carer for the week | `/v2/analysis/compare` on every resident and carer pair; the shared genres, instruments and themes, with the favourite on each side behind them | [`week.match`](encore/week.py) |
 | Food of home near the care home | `/v2/insights` places with `filter.location.query`, `filter.location.radius`, cuisine `filter.tags`, the resident's signals | [`taste.taste_of_home`](encore/taste.py) |
 | Full records for the family's picks (notable songs, images) | `filter.results.entities` | [`taste.seed_details`](encore/taste.py) |
 
@@ -53,7 +56,24 @@ The lounge film, scored on one shared pool (Encore's shortlist plus the model's 
 | Most popular on the shortlist | Singin' in the Rain (1952) | 0.00 | 0.33 |
 | The model alone | Singin' in the Rain (1952) | 0.00 | 0.33 |
 
-Why the music lanes look the way they do: across the 14 residents, Qloo artist results seeded by the family's favourites were inside the resident's window 501/700 times with the 55-and-older age signal, 509/700 with no extra signal, and **635/700 with the oldies genre tag**. The age signal describes today's over-55 audience, whose youth came decades after a resident born in the 1930s, so Encore leaves it off for artists.
+The week, on the same 14 residents and the same per-resident Qloo rankings (live demo, 16 Oct 2026):
+
+| | Least-served resident's best film this week |
+|---|---|
+| One lounge film (All That Heaven Allows) | 0.42 (Rosa) |
+| Two films chosen as a pair (adds Laterna, ftoheia kai filotimo, 1955) | 0.63 (Walter); average 0.86 |
+
+Matching one-to-ones by Qloo Compare gives pairs that share 269 genres, instruments and themes in total, against 179 for an alphabetical rota with the same three carers. Tomasz goes to Priya: "Rock: Tomasz's Czesław Niemen and Priya's Coldplay", 38 shared tastes against 5 with Ana.
+
+Why the music lanes look the way they do: across the 14 residents, Qloo artist results seeded by the family's favourites were inside the resident's window 501/700 times with the 55-and-older age signal, 509/700 with no extra signal, and **635/700 with the oldies genre tag**. The age signal describes today's over-55 audience, whose youth came decades after a resident born in the 1930s, so Encore leaves it off for artists. The oldies tag itself only helps for people born before 1955: for fans of Madonna and Prince born in 1962 it kept 46/50 artists in the window against 49/50 without it, so the family form drops it for later births.
+
+## Why this problem
+
+- 14,742 US nursing facilities are certified by CMS, with about 1.24 million residents ([KFF, 2025](https://www.kff.org/medicaid/a-look-at-nursing-facility-characteristics/)). 41.1% of residents had Alzheimer's disease or another dementia in 2022 ([CDC NCHS](https://www.cdc.gov/nchs/fastats/alzheimers.htm)).
+- Each must provide "an ongoing program to support residents in their choice of activities ... designed to meet the interests of and support the physical, mental, and psychosocial well-being of each resident" ([42 CFR 483.24(c)(1)](https://www.law.cornell.edu/cfr/text/42/483.24), survey tag F679).
+- A Cochrane review of 22 randomised trials with 1,097 people with dementia in institutional care found that music-based interventions probably reduce depressive symptoms and improve overall behavioural problems at the end of treatment ([van der Steen et al., 2018](https://pmc.ncbi.nlm.nih.gov/articles/PMC6513122)).
+- 21% of nursing assistants in US nursing homes are immigrants ([PHI, 2025](https://www.phinational.org/news/phi-report-highlights-record-growth-in-direct-care-workforce-warns-federal-policy-changes-threaten-job-qua)), so the carer and the resident often grew up decades and continents apart.
+- People recall the most from ages 10 to 30, the reminiscence bump (Rubin, Rahhal and Poon, *Memory & Cognition*, 1998).
 
 ## What Qloo sees
 
@@ -76,6 +96,9 @@ flowchart LR
   S --> UI
   UI -->|reactions| L[learning: signals, rest, exclusions]
   L --> T
+  G --> W[week: film pair, carer rota]
+  W -->|/v2/analysis/compare| Q
+  FF[Family form: year, town, favourites, no name] --> R
   A[Agent + MCP: read-only tools] --> G
   A --> S
 ```
@@ -90,6 +113,9 @@ flowchart LR
 | A title with several releases resolves to the one from their youth | `encore/roster.py` | `tests/test_taste.py::test_same_title_resolves_to_the_release_of_their_youth` |
 | The lounge pick maximises the least-served resident's fit | `encore/group.py` | `tests/test_group.py` |
 | Lit up becomes a signal; upset excludes; no response rests | `encore/learning.py` | `tests/test_flows.py` |
+| Someone added on the family form is seen only by that visitor, never joins the shared lounge unless brought in, and their relation never reaches Qloo | `encore/family.py`, `roster.people` | `tests/test_week_family.py::test_family_form_adds_a_person_only_its_visitor_sees` |
+| The week's two films are the pair whose least-served resident's better film fits best | `encore/week.py` `best_pair` | `tests/test_week_family.py::test_two_films_chosen_together_beat_the_two_best_films_taken_separately` |
+| Each carer takes at most an even share of one-to-ones, and the strongest match is kept | `encore/week.py` `assign` | `tests/test_week_family.py::test_assignment_respects_each_carers_share_and_keeps_the_strong_pair` |
 | The product works when the model is unavailable | `encore/session.py` `_template`, `encore/agent.py` `_fallback` | `tests/test_flows.py::test_session_plan_uses_template_words_without_a_model`, `::test_agent_falls_back_to_the_matching_tool` |
 | Qloo failures retry, then fall back to the cache | `encore/qloo.py` | `tests/test_flows.py` |
 
@@ -106,9 +132,9 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 Open http://127.0.0.1:8077. On first start Encore resolves the favourites and warms its cache for all residents.
 
-- Tests: `.venv/bin/python -m pytest` (27 tests, no network).
+- Tests: `.venv/bin/python -m pytest` (33 tests, no network).
 - Evaluation: `.venv/bin/python scripts/evaluate.py` (needs both keys; writes `eval/results.json`, shown on the How it works page).
-- MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`.
+- MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`, `week_plan`.
 - Deploy: `deploy/provision.sh` then `deploy/redeploy.sh` (AWS t4g.small, Caddy, keys in SSM Parameter Store).
 
 ## Limits

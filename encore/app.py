@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from . import family
 from .agent import Agent
 from .config import ROOT, load_config
 from .learning import REACTIONS
@@ -71,6 +72,14 @@ class Reaction(BaseModel):
     note: Optional[str] = Field(default=None, max_length=300)
 
 
+class NewPerson(BaseModel):
+    relation: str = Field(max_length=20)
+    birth_year: int = Field(ge=1920, le=1975)
+    city: str = Field(min_length=2, max_length=60)
+    country: str = Field(max_length=40)
+    favourites: list[NewFavourite] = Field(min_length=1, max_length=3)
+
+
 class Ask(BaseModel):
     message: str = Field(min_length=1, max_length=800)
     history: list[dict] = []
@@ -79,6 +88,11 @@ class Ask(BaseModel):
 def visitor_of(request: Request) -> str:
     ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "")
     return hashlib.sha256(ip.encode()).hexdigest()[:16]
+
+
+def owner_of(request: Request) -> Optional[str]:
+    """The random token a visitor's browser keeps, so people they add stay theirs."""
+    return family.valid_owner(request.headers.get("x-encore-visitor"))
 
 
 def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
@@ -133,16 +147,20 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
                 "warm": enc.warm_state, "reactions": REACTIONS}
 
     @app.get("/api/home")
-    async def home():
-        return enc.home()
+    async def home(request: Request):
+        return enc.home(owner_of(request))
 
     @app.get("/api/people/{pid}/profile")
     async def profile(pid: str):
         return await enc.profile(pid)
 
     @app.get("/api/lounge")
-    async def lounge_get(domain: str = "movie", max_minutes: Optional[int] = None):
-        return await enc.lounge(domain, None, max_minutes)
+    async def lounge_get(domain: str = "movie", max_minutes: Optional[int] = None, add: Optional[str] = None):
+        return await enc.lounge(domain, None, max_minutes, [add] if add else None)
+
+    @app.get("/api/week")
+    async def week_plan():
+        return await enc.week()
 
     @app.post("/api/lounge")
     async def lounge_post(body: Lounge):
@@ -190,6 +208,22 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
     async def react(body: Reaction):
         return await enc.react(body.person_id, body.item.model_dump(), body.reaction, body.carer_id, body.session_id,
                                body.note)
+
+    @app.post("/api/people")
+    async def add_person(body: NewPerson, request: Request):
+        owner = owner_of(request)
+        if not owner:
+            raise HTTPException(400, "Missing visitor token.")
+        return await enc.add_person(owner, body.relation, body.birth_year, body.city, body.country,
+                                    [(f.label, f.kind) for f in body.favourites])
+
+    @app.delete("/api/people/{pid}")
+    async def remove_person(pid: str, request: Request):
+        owner = owner_of(request)
+        if not owner:
+            raise HTTPException(400, "Missing visitor token.")
+        enc.remove_person(owner, pid)
+        return {"ok": True}
 
     @app.post("/api/people/{pid}/present")
     async def present(pid: str, body: Present):

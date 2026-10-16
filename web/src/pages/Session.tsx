@@ -130,7 +130,7 @@ export default function Session() {
                       <h2>{s.song ? `“${s.song}”` : it.name}</h2>
                       <div className="ink2">
                         {s.song ? `${it.name} · ` : ""}
-                        {it.year}
+                        {it.type === "artist" || s.song ? `recording since ${it.start_year ?? it.year}` : it.year}
                         {it.duration ? ` · ${it.duration} min` : ""}
                       </div>
                     </>

@@ -49,6 +49,10 @@ def build_mcp(agent: Agent) -> MCPServer:
     async def common_ground(resident: str, carer: str) -> dict[str, Any]:
         return await run("common_ground", {"resident": resident, "carer": carer})
 
+    @server.tool(description="The week's programme: two lounge films chosen together, a music hour, and carers matched to residents by shared tastes.")
+    async def week_plan() -> dict[str, Any]:
+        return await run("week_plan", {})
+
     return server
 
 

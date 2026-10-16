@@ -111,6 +111,14 @@ def cooled_down(store: Store, pid: str) -> list[str]:
 
 
 ERA_MUSIC_TAG = "urn:tag:genre:music:oldies"
+OLDIES_BEFORE = 1955
+
+
+def era_music_tags(birth_year: int) -> list[tuple[str, object]]:
+    """The oldies genre keeps artist results in the youth of someone born before 1955. For later
+    births it removes artists from their own years (measured: fans of Madonna and Prince born in 1962,
+    46/50 artists in the window with the tag against 49/50 without), so it is left off."""
+    return [("filter.tags", ERA_MUSIC_TAG)] if birth_year < OLDIES_BEFORE else []
 
 
 async def lanes_for(qloo: Qloo, p: dict, domain: str) -> list[Lane]:
@@ -134,7 +142,7 @@ async def lanes_for(qloo: Qloo, p: dict, domain: str) -> list[Lane]:
     sig = [("signal.interests.entities", seeds)] if seeds else []
     lanes: list[Lane] = []
     if seeds:
-        lanes.append(Lane("family favourites", base + sig + ([("filter.tags", ERA_MUSIC_TAG)] if domain == "artist" else [])))
+        lanes.append(Lane("family favourites", base + sig + (era_music_tags(p["birth_year"]) if domain == "artist" else [])))
     home: list[tuple[str, object]] = []
     if domain in ("movie", "tv_show") and p.get("country"):
         home = [("filter.release_country", p["country"])]

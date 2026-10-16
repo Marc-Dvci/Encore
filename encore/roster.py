@@ -68,9 +68,11 @@ def person(store: Store, pid: str) -> Optional[dict]:
     return p
 
 
-def people(store: Store, kind: str, present_only: bool = False) -> list[dict]:
-    sql = "SELECT id FROM people WHERE kind=?" + (" AND present=1" if present_only else "") + " ORDER BY first_name"
-    return [person(store, r["id"]) for r in store.q(sql, (kind,))]
+def people(store: Store, kind: str, present_only: bool = False, owner: Optional[str] = None) -> list[dict]:
+    """The home's own people. Someone a visitor added is listed only for that visitor."""
+    sql = ("SELECT id FROM people WHERE kind=? AND (owner IS NULL OR owner=?)" + (" AND present=1" if present_only else "")
+           + " ORDER BY owner IS NOT NULL, first_name")
+    return [person(store, r["id"]) for r in store.q(sql, (kind, owner or ""))]
 
 
 def seed_ids(p: dict, limit: int = 6) -> list[str]:

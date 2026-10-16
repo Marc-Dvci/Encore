@@ -22,7 +22,7 @@ async def common_ground(qloo: Qloo, resident: dict, carer: dict) -> dict:
     lo, hi = taste.window(resident["birth_year"])
     cmp_task = qloo.compare(a, b, purpose="tastes a resident and a carer share")
     art_task = qloo.insights([("filter.type", "urn:entity:artist"), ("signal.interests.entities", a + b),
-                              ("filter.tags", taste.ERA_MUSIC_TAG), ("feature.explainability", True), ("take", 30)],
+                              *taste.era_music_tags(resident["birth_year"]), ("feature.explainability", True), ("take", 30)],
                              purpose="a song from their youth that both people's tastes point to")
     mov_task = qloo.insights([("filter.type", "urn:entity:movie"), ("signal.interests.entities", a + b),
                               ("filter.release_year.min", lo), ("filter.release_year.max", hi),

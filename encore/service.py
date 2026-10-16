@@ -6,7 +6,7 @@ import json
 import logging
 from typing import Optional
 
-from . import common, group, learning, roster, session, taste
+from . import common, family, group, learning, roster, session, taste, week
 from .ai import AI
 from .config import Config
 from .qloo import Qloo, QlooUnavailable
@@ -39,7 +39,7 @@ class Encore:
     async def warm(self) -> None:
         """Fill the private cache for every resident so the first visitor waits for nothing."""
         residents = roster.people(self.store, "resident")
-        self.warm_state = {"done": 0, "total": len(residents) + 2, "running": True}
+        self.warm_state = {"done": 0, "total": len(residents) + 3, "running": True}
         try:
             for r in residents:
                 await taste.era_profile(self.store, self.qloo, r)
@@ -47,6 +47,8 @@ class Encore:
             await self.lounge("movie")
             self.warm_state["done"] += 1
             await self.lounge("artist")
+            self.warm_state["done"] += 1
+            await self.week()
             self.warm_state["done"] += 1
         except QlooUnavailable as e:
             log.warning("warm-up stopped: %s", e)
@@ -61,12 +63,13 @@ class Encore:
             raise NotFound(pid)
         return p
 
-    def home(self) -> dict:
+    def home(self, owner: Optional[str] = None) -> dict:
         h = roster.home(self.store)
-        residents = roster.people(self.store, "resident")
+        residents = roster.people(self.store, "resident", owner=owner)
         return {**h, "residents": [self._card(r) for r in residents],
                 "carers": [self._card(c) for c in roster.people(self.store, "carer")],
-                "present": sum(1 for r in residents if r["present"])}
+                "present": sum(1 for r in residents if r["present"]),
+                "relations": list(family.RELATIONS), "countries": sorted(family.COUNTRIES)}
 
     def _card(self, p: dict) -> dict:
         pending = [f for f in p["favourites"] if f["status"] == "needs_input"]
@@ -76,7 +79,8 @@ class Encore:
                 "birth_year": p["birth_year"], "age": p["age"], "city": p["city"], "country": p["country"],
                 "room": p["room"], "present": bool(p["present"]), "languages": p["languages"],
                 "favourites": [f["entity_name"] or f["label"] for f in p["favourites"] if f["source"] == "family"],
-                "needs_input": len(pending), "last_reaction": last, "staff_note": p.get("care_note") or None}
+                "needs_input": len(pending), "last_reaction": last, "staff_note": p.get("care_note") or None,
+                "guest": bool(p.get("owner"))}
 
     async def profile(self, pid: str) -> dict:
         p = self.person(pid)
@@ -102,16 +106,23 @@ class Encore:
     def _public(self, p: dict) -> dict:
         keep = ("id", "kind", "first_name", "last_initial", "birth_year", "age", "city", "country", "demonym",
                 "languages", "room", "present", "family_note", "care_note")
-        return {k: p.get(k) for k in keep}
+        return {**{k: p.get(k) for k in keep}, "guest": bool(p.get("owner"))}
 
     async def lounge(self, domain: str = "movie", ids: Optional[list[str]] = None,
-                     max_minutes: Optional[int] = None) -> dict:
+                     max_minutes: Optional[int] = None, extra: Optional[list[str]] = None) -> dict:
         residents = [self.person(i) for i in ids] if ids else roster.people(self.store, "resident", present_only=True)
+        for i in extra or []:
+            if i not in {r["id"] for r in residents}:
+                residents.append(self.person(i))
         if not residents:
             return {"domain": domain, "pick": None, "candidates": [], "playlist": []}
         if domain == "artist":
             return await group.music_hour(self.store, self.qloo, residents)
         return await group.film_pick(self.store, self.qloo, residents, max_minutes)
+
+    async def week(self) -> dict:
+        return await week.plan_week(self.store, self.qloo, roster.people(self.store, "resident", present_only=True),
+                                    roster.people(self.store, "carer"))
 
     async def common(self, rid: str, cid: str) -> dict:
         return await common.common_ground(self.qloo, self.person(rid), self.person(cid))
@@ -164,7 +175,8 @@ class Encore:
         self.store.x("DELETE FROM avoid WHERE id=? AND person_id=?", (avoid_id, pid))
 
     def set_present(self, pid: str, present: bool) -> None:
-        self.person(pid)
+        if self.person(pid).get("owner"):
+            raise ValueError("someone a visitor added joins the lounge from their own page, not for everyone")
         self.store.x("UPDATE people SET present=? WHERE id=?", (int(present), pid))
 
     def confirm_favourite(self, fav_id: int, entity_id: str, entity_name: str) -> None:
@@ -182,6 +194,14 @@ class Encore:
                            "VALUES(?,?,?,?,?,?,'family')", (pid, label, kind, r.get("entity_id"), r.get("entity_name"),
                                                              r["status"]))
         return {"id": fid, **r}
+
+    async def add_person(self, owner: str, relation: str, birth_year: int, city: str, country: str,
+                         favourites: list[tuple[str, str]]) -> dict:
+        return await family.add_person(self.store, self.qloo, owner, relation, birth_year, city, country, favourites)
+
+    def remove_person(self, owner: str, pid: str) -> None:
+        if not family.remove_person(self.store, owner, pid):
+            raise NotFound(pid)
 
     def remove_favourite(self, pid: str, fav_id: int) -> None:
         self.store.x("DELETE FROM favourites WHERE id=? AND person_id=?", (fav_id, pid))
