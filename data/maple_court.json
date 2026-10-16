@@ -1,0 +1,517 @@
+{
+ "home": {
+  "name": "Maple Court",
+  "town": "Evanston, Illinois",
+  "coordinator": "Dana",
+  "lounge_time": "Thursday 3:00 pm",
+  "radius_m": 15000,
+  "house_rules": [
+   [
+    "urn:tag:genre:media:horror",
+    "No horror in shared spaces"
+   ]
+  ],
+  "max_film_minutes": 110
+ },
+ "residents": [
+  {
+   "id": "r-tomasz",
+   "first_name": "Tomasz",
+   "last_initial": "W",
+   "birth_year": 1937,
+   "city": "Kraków",
+   "country": "Poland",
+   "demonym": "Polish",
+   "languages": "Polish, English",
+   "room": "12",
+   "favourites": [
+    [
+     "Czesław Niemen",
+     "artist"
+    ],
+    [
+     "Irena Santor",
+     "artist"
+    ],
+    [
+     "Rejs",
+     "movie"
+    ]
+   ],
+   "avoid": [
+    [
+     "urn:tag:genre:media:war",
+     "War films"
+    ]
+   ],
+   "family_note": "Grew up in Kraków during the occupation. Please no war films. Came to Chicago in 1981 and worked as a tram mechanic.",
+   "care_note": "Few words this week. Hearing aid on the left.",
+   "cuisine": "polish",
+   "music_genre": "polish"
+  },
+  {
+   "id": "r-rosa",
+   "first_name": "Rosa",
+   "last_initial": "M",
+   "birth_year": 1940,
+   "city": "Guadalajara",
+   "country": "Mexico",
+   "demonym": "Mexican",
+   "languages": "Spanish, English",
+   "room": "4",
+   "favourites": [
+    [
+     "Pedro Infante",
+     "artist"
+    ],
+    [
+     "Javier Solís",
+     "artist"
+    ],
+    [
+     "Nosotros los pobres",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Sang in the church choir. Loves boleros and rancheras.",
+   "care_note": "",
+   "cuisine": "mexican",
+   "music_genre": "mexican"
+  },
+  {
+   "id": "r-eleanor",
+   "first_name": "Eleanor",
+   "last_initial": "K",
+   "birth_year": 1934,
+   "city": "Chicago",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English",
+   "room": "7",
+   "favourites": [
+    [
+     "Frank Sinatra",
+     "artist"
+    ],
+    [
+     "Singin' in the Rain",
+     "movie"
+    ],
+    [
+     "I Love Lucy",
+     "tv_show"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Danced at the Aragon Ballroom on Saturday nights.",
+   "care_note": "",
+   "cuisine": "american",
+   "music_genre": null
+  },
+  {
+   "id": "r-walter",
+   "first_name": "Walter",
+   "last_initial": "J",
+   "birth_year": 1938,
+   "city": "Memphis",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English",
+   "room": "9",
+   "favourites": [
+    [
+     "Elvis Presley",
+     "artist"
+    ],
+    [
+     "Johnny Cash",
+     "artist"
+    ],
+    [
+     "Gunsmoke",
+     "tv_show"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Drove a delivery truck for thirty years. Westerns on Saturday.",
+   "care_note": "",
+   "cuisine": "barbecue",
+   "music_genre": null
+  },
+  {
+   "id": "r-bridget",
+   "first_name": "Bridget",
+   "last_initial": "O",
+   "birth_year": 1937,
+   "city": "Dublin",
+   "country": "Ireland",
+   "demonym": "Irish",
+   "languages": "English, some Irish",
+   "room": "15",
+   "favourites": [
+    [
+     "The Clancy Brothers",
+     "artist"
+    ],
+    [
+     "The Quiet Man",
+     "movie"
+    ],
+    [
+     "Bing Crosby",
+     "artist"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Emigrated in 1958. Still knows every word of the old ballads.",
+   "care_note": "",
+   "cuisine": "irish",
+   "music_genre": "irish"
+  },
+  {
+   "id": "r-giuseppe",
+   "first_name": "Giuseppe",
+   "last_initial": "R",
+   "birth_year": 1935,
+   "city": "Naples",
+   "country": "Italy",
+   "demonym": "Italian",
+   "languages": "Italian, English",
+   "room": "3",
+   "favourites": [
+    [
+     "Renato Carosone",
+     "artist"
+    ],
+    [
+     "Domenico Modugno",
+     "artist"
+    ],
+    [
+     "La Strada",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Ran a barber shop on Taylor Street. Whistles while he works.",
+   "care_note": "",
+   "cuisine": "italian",
+   "music_genre": "italian"
+  },
+  {
+   "id": "r-lourdes",
+   "first_name": "Lourdes",
+   "last_initial": "S",
+   "birth_year": 1942,
+   "city": "Manila",
+   "country": "Philippines",
+   "demonym": "Filipino",
+   "languages": "Tagalog, English",
+   "room": "11",
+   "favourites": [
+    [
+     "Pilita Corrales",
+     "artist"
+    ],
+    [
+     "Nat King Cole",
+     "artist"
+    ],
+    [
+     "The Sound of Music",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "A nurse for forty years. Sings harmony to anything.",
+   "care_note": "",
+   "cuisine": "filipino",
+   "music_genre": "filipino pop"
+  },
+  {
+   "id": "r-earl",
+   "first_name": "Earl",
+   "last_initial": "T",
+   "birth_year": 1939,
+   "city": "Kingston",
+   "country": "Jamaica",
+   "demonym": "Jamaican",
+   "languages": "English, Patois",
+   "room": "6",
+   "favourites": [
+    [
+     "The Skatalites",
+     "artist"
+    ],
+    [
+     "Harry Belafonte",
+     "artist"
+    ],
+    [
+     "Dr. No",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Watched them film Dr. No in 1962. Played trombone.",
+   "care_note": "",
+   "cuisine": "jamaican",
+   "music_genre": "jamaican"
+  },
+  {
+   "id": "r-ruth",
+   "first_name": "Ruth",
+   "last_initial": "G",
+   "birth_year": 1941,
+   "city": "Brooklyn",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English, Yiddish",
+   "room": "2",
+   "favourites": [
+    [
+     "Barbra Streisand",
+     "artist"
+    ],
+    [
+     "West Side Story",
+     "movie"
+    ],
+    [
+     "The Ed Sullivan Show",
+     "tv_show"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Taught fourth grade. Saw Barbra at the Bon Soir.",
+   "care_note": "",
+   "cuisine": "jewish",
+   "music_genre": null
+  },
+  {
+   "id": "r-minja",
+   "first_name": "Min-ja",
+   "last_initial": "P",
+   "birth_year": 1944,
+   "city": "Seoul",
+   "country": "South Korea",
+   "demonym": "Korean",
+   "languages": "Korean, English",
+   "room": "14",
+   "favourites": [
+    [
+     "The Pearl Sisters",
+     "artist"
+    ],
+    [
+     "Doris Day",
+     "artist"
+    ],
+    [
+     "The Housemaid",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Opened a dry cleaner in Albany Park in 1975.",
+   "care_note": "",
+   "cuisine": "korean",
+   "music_genre": "korean"
+  },
+  {
+   "id": "r-dorothy",
+   "first_name": "Dorothy",
+   "last_initial": "H",
+   "birth_year": 1932,
+   "city": "Atlanta",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English",
+   "room": "1",
+   "favourites": [
+    [
+     "Mahalia Jackson",
+     "artist"
+    ],
+    [
+     "Sam Cooke",
+     "artist"
+    ],
+    [
+     "Imitation of Life",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Gospel every Sunday. Moved north in 1955.",
+   "care_note": "",
+   "cuisine": "soul food",
+   "music_genre": null
+  },
+  {
+   "id": "r-nikos",
+   "first_name": "Nikos",
+   "last_initial": "A",
+   "birth_year": 1936,
+   "city": "Thessaloniki",
+   "country": "Greece",
+   "demonym": "Greek",
+   "languages": "Greek, English",
+   "room": "8",
+   "favourites": [
+    [
+     "Mikis Theodorakis",
+     "artist"
+    ],
+    [
+     "Nana Mouskouri",
+     "artist"
+    ],
+    [
+     "Zorba the Greek",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Owned a diner on Halsted. Dances when he hears a bouzouki.",
+   "care_note": "",
+   "cuisine": "greek",
+   "music_genre": "greek"
+  },
+  {
+   "id": "r-harold",
+   "first_name": "Harold",
+   "last_initial": "B",
+   "birth_year": 1933,
+   "city": "Milwaukee",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English, German",
+   "room": "10",
+   "favourites": [
+    [
+     "Glenn Miller",
+     "artist"
+    ],
+    [
+     "The Honeymooners",
+     "tv_show"
+    ],
+    [
+     "High Noon",
+     "movie"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Brewery foreman. Big band records every evening.",
+   "care_note": "",
+   "cuisine": "german",
+   "music_genre": null
+  },
+  {
+   "id": "r-ingrid",
+   "first_name": "Ingrid",
+   "last_initial": "L",
+   "birth_year": 1940,
+   "city": "Stockholm",
+   "country": "Sweden",
+   "demonym": "Swedish",
+   "languages": "Swedish, English",
+   "room": "5",
+   "favourites": [
+    [
+     "Lill-Babs",
+     "artist"
+    ],
+    [
+     "Wild Strawberries",
+     "movie"
+    ],
+    [
+     "Pippi Longstocking",
+     "book"
+    ]
+   ],
+   "avoid": [],
+   "family_note": "Came over as an au pair in 1961 and stayed.",
+   "care_note": "",
+   "cuisine": "swedish",
+   "music_genre": "swedish"
+  }
+ ],
+ "carers": [
+  {
+   "id": "c-priya",
+   "first_name": "Priya",
+   "last_initial": "N",
+   "birth_year": 2000,
+   "city": "Kochi",
+   "country": "India",
+   "demonym": "Indian",
+   "languages": "Malayalam, English",
+   "favourites": [
+    [
+     "A. R. Rahman",
+     "artist"
+    ],
+    [
+     "Premam",
+     "movie"
+    ],
+    [
+     "Coldplay",
+     "artist"
+    ]
+   ]
+  },
+  {
+   "id": "c-marcus",
+   "first_name": "Marcus",
+   "last_initial": "D",
+   "birth_year": 1992,
+   "city": "Atlanta",
+   "country": "United States",
+   "demonym": "American",
+   "languages": "English",
+   "favourites": [
+    [
+     "OutKast",
+     "artist"
+    ],
+    [
+     "The Fresh Prince of Bel-Air",
+     "tv_show"
+    ],
+    [
+     "Black Panther",
+     "movie"
+    ]
+   ]
+  },
+  {
+   "id": "c-ana",
+   "first_name": "Ana",
+   "last_initial": "R",
+   "birth_year": 1985,
+   "city": "Quezon City",
+   "country": "Philippines",
+   "demonym": "Filipino",
+   "languages": "Tagalog, English",
+   "favourites": [
+    [
+     "Regine Velasquez",
+     "artist"
+    ],
+    [
+     "Titanic",
+     "movie"
+    ],
+    [
+     "Friends",
+     "tv_show"
+    ]
+   ]
+  }
+ ]
+}

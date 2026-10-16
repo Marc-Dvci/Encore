@@ -1,0 +1,6 @@
+[Unit]
+Description=Restore the Encore demo home to its starting state
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -s -X POST http://127.0.0.1:8000/api/demo/reset
