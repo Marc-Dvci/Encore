@@ -85,3 +85,43 @@ async def test_family_form_over_http_needs_the_visitor_token(enc):
         assert c.post(f"/api/people/{pid}/present", json={"present": True}).status_code == 400
         assert c.get("/api/week").status_code == 200
         assert c.delete(f"/api/people/{pid}", headers={"x-encore-visitor": OWNER}).json() == {"ok": True}
+
+
+async def test_someone_a_visitor_added_answers_only_to_that_visitor(enc):
+    mine, other = {"x-encore-visitor": OWNER}, {"x-encore-visitor": "someone-else-0123456789"}
+    with TestClient(create_app(enc, warm=False)) as c:
+        body = {"relation": "Mum", "birth_year": 1950, "city": "Lyon", "country": "France",
+                "favourites": [{"label": "Édith Piaf", "kind": "artist"}]}
+        pid = c.post("/api/people", json=body, headers=mine).json()["id"]
+        sid = c.post("/api/sessions", json={"resident": pid, "carer": "c-priya"}, headers=mine).json()["id"]
+        fid = c.get(f"/api/people/{pid}/profile", headers=mine).json()["favourites"][0]["id"]
+        calls = [("get", f"/api/people/{pid}/profile", None), ("get", f"/api/record/{pid}", None),
+                 ("get", f"/api/sessions/{sid}", None), ("get", f"/api/lounge?add={pid}", None),
+                 ("get", f"/api/common?resident={pid}&carer=c-priya", None),
+                 ("post", "/api/lounge", {"residents": [pid]}),
+                 ("post", "/api/sessions", {"resident": pid, "carer": "c-priya"}),
+                 ("post", "/api/reactions", {"person_id": pid, "reaction": "lit_up",
+                                             "item": {"entity_id": "0" * 36, "name": "x", "type": "artist"}}),
+                 ("post", f"/api/people/{pid}/favourites", {"label": "Juliette Gréco", "kind": "artist"}),
+                 ("delete", f"/api/people/{pid}/favourites/{fid}", None),
+                 ("post", f"/api/favourites/{fid}/confirm", {"entity_id": "0" * 36, "entity_name": "x"}),
+                 ("post", f"/api/people/{pid}/avoid", {"tag_id": "urn:tag:x", "label": "x"}),
+                 ("delete", f"/api/people/{pid}/avoid/1", None)]
+        for headers in ({}, other):
+            for method, url, js in calls:
+                kw = {"json": js} if js is not None else {}
+                assert c.request(method, url, headers=headers, **kw).status_code == 404, (method, url)
+            assert sid not in {s["id"] for s in c.get("/api/sessions", headers=headers).json()}
+        assert c.get(f"/api/people/{pid}/profile", headers=mine).status_code == 200
+        assert c.get(f"/api/record/{pid}", headers=mine).status_code == 200
+        assert sid in {s["id"] for s in c.get("/api/sessions", headers=mine).json()}
+        # The fictional residents stay open to every visitor, as the demo needs.
+        assert c.get("/api/people/r-tomasz/profile").status_code == 200
+
+
+async def test_the_demo_resets_only_from_the_machine_itself(enc):
+    with TestClient(create_app(enc, warm=False)) as c:
+        assert c.post("/api/demo/reset").status_code == 403
+    with TestClient(create_app(enc, warm=False), client=("127.0.0.1", 50000)) as c:
+        assert c.post("/api/demo/reset", headers={"x-forwarded-for": "203.0.113.9"}).status_code == 403
+        assert c.post("/api/demo/reset").json() == {"ok": True}

@@ -79,10 +79,26 @@ async def affinities(qloo: Qloo, residents: list[dict], pool: list[dict], domain
 
 
 def percentiles(aff: dict[str, float], ids: list[str]) -> dict[str, float]:
-    """Where each candidate sits in this resident's own ranking: 1.0 is their top choice, 0.0 their last."""
+    """Where each candidate sits in this resident's own ranking: 1.0 is their top choice, 0.0 their last.
+
+    Candidates with the same affinity, including those Qloo returned no affinity for, share the mean of
+    their places, so list order never separates films Qloo could not tell apart.
+    """
+    n = len(ids)
+    if n < 2:
+        return {i: 1.0 for i in ids}
     order = sorted(ids, key=lambda i: aff.get(i, 0.0))
-    n = len(order)
-    return {i: (k / (n - 1) if n > 1 else 1.0) for k, i in enumerate(order)}
+    out: dict[str, float] = {}
+    k = 0
+    while k < n:
+        v = aff.get(order[k], 0.0)
+        j = k
+        while j + 1 < n and aff.get(order[j + 1], 0.0) == v:
+            j += 1
+        for i in order[k:j + 1]:
+            out[i] = (k + j) / 2 / (n - 1)
+        k = j + 1
+    return out
 
 
 def era_credit(resident: dict, cand: dict, domain: str) -> float:

@@ -10,6 +10,27 @@ def test_percentiles_run_from_last_to_first():
     assert p == {"b": 0.0, "c": 0.5, "a": 1.0}
 
 
+def test_percentiles_give_tied_candidates_one_shared_place():
+    # Three films Qloo scores the same: list order must not spread them over 0, 0.5 and 1.0.
+    for ids in (["a", "b", "c"], ["c", "b", "a"]):
+        assert group.percentiles({"a": 0.4, "b": 0.4, "c": 0.4}, ids) == {"a": 0.5, "b": 0.5, "c": 0.5}
+    # Films with no affinity tie at the bottom; a tie in the middle shares the middle places.
+    p = group.percentiles({"a": 0.9, "b": 0.6, "c": 0.6}, ["d", "a", "e", "b", "c"])
+    assert p == {"d": 0.125, "e": 0.125, "b": 0.625, "c": 0.625, "a": 1.0}
+    assert group.percentiles({}, ["x", "y"]) == {"x": 0.5, "y": 0.5}
+
+
+def test_a_resident_qloo_cannot_separate_does_not_decide_the_pick():
+    # r3 has no affinities. List order used to give r3's fits 0, 0.5 and 1.0, so A (listed first)
+    # lost to B although r1 and r2 both rank A first.
+    residents = [res(1), res(2), res(3)]
+    pool = [{"entity_id": x, "name": x, "year": 1960} for x in ("A", "B", "C")]
+    aff = {"r1": {"A": 0.9, "B": 0.5, "C": 0.1}, "r2": {"A": 0.9, "B": 0.5, "C": 0.1}, "r3": {}}
+    rows = group.score_candidates(residents, pool, aff, "movie")
+    assert {x["rank_pct"] for row in rows for x in row["per_resident"] if x["id"] == "r3"} == {0.5}
+    assert rows[0]["name"] == "A"
+
+
 def test_maximin_beats_the_crowd_favourite_for_the_least_served():
     # Film A: loved by two, last for the third. Film B: second for everyone.
     residents = [res(1), res(2), res(3)]

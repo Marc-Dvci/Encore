@@ -95,6 +95,12 @@ def owner_of(request: Request) -> Optional[str]:
     return family.valid_owner(request.headers.get("x-encore-visitor"))
 
 
+def from_this_machine(request: Request) -> bool:
+    """The nightly timer calls the app directly; every request through Caddy carries X-Forwarded-For."""
+    host = request.client.host if request.client else ""
+    return host in ("127.0.0.1", "::1") and "x-forwarded-for" not in request.headers
+
+
 def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
     enc = enc or Encore(load_config())
     agent = Agent(enc)
@@ -138,6 +144,14 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
     async def bad(_: Request, e: ValueError):
         return JSONResponse({"error": str(e)}, status_code=400)
 
+    def check_owner(request: Request, *pids: Optional[str]) -> None:
+        """Someone a visitor added answers only to that visitor's token; the fictional residents stay open."""
+        for pid in pids:
+            if pid:
+                owner = enc.person(pid).get("owner")
+                if owner and owner != owner_of(request):
+                    raise NotFound(pid)
+
     # ---- reads ---------------------------------------------------------------------------
 
     @app.get("/api/status")
@@ -151,11 +165,14 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
         return enc.home(owner_of(request))
 
     @app.get("/api/people/{pid}/profile")
-    async def profile(pid: str):
+    async def profile(pid: str, request: Request):
+        check_owner(request, pid)
         return await enc.profile(pid)
 
     @app.get("/api/lounge")
-    async def lounge_get(domain: str = "movie", max_minutes: Optional[int] = None, add: Optional[str] = None):
+    async def lounge_get(request: Request, domain: str = "movie", max_minutes: Optional[int] = None,
+                         add: Optional[str] = None):
+        check_owner(request, add)
         return await enc.lounge(domain, None, max_minutes, [add] if add else None)
 
     @app.get("/api/week")
@@ -163,30 +180,39 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
         return await enc.week()
 
     @app.post("/api/lounge")
-    async def lounge_post(body: Lounge):
+    async def lounge_post(body: Lounge, request: Request):
+        check_owner(request, *(body.residents or []))
         return await enc.lounge(body.domain, body.residents, body.max_minutes)
 
     @app.get("/api/common")
-    async def common(resident: str, carer: str):
+    async def common(resident: str, carer: str, request: Request):
+        check_owner(request, resident, carer)
         return await enc.common(resident, carer)
 
     @app.get("/api/sessions/{sid}")
-    async def get_session(sid: str):
-        return enc.session(sid)
+    async def get_session(sid: str, request: Request):
+        s = enc.session(sid)
+        check_owner(request, s["resident"]["id"])
+        return s
 
     @app.get("/api/sessions")
-    async def list_sessions():
+    async def list_sessions(request: Request):
+        others = {r["id"] for r in enc.store.q("SELECT id FROM people WHERE owner IS NOT NULL AND owner IS NOT ?",
+                                               (owner_of(request),))}
         rows = enc.store.q("SELECT id, at, carer_id, person_ids, plan FROM sessions ORDER BY at DESC LIMIT 30")
         out = []
         for r in rows:
             p = json.loads(r["plan"])
+            if p["resident"]["id"] in others:
+                continue
             n = enc.store.one("SELECT COUNT(*) n FROM reactions WHERE session_id=?", (r["id"],))["n"]
             out.append({"id": r["id"], "at": r["at"], "resident": p["resident"]["first_name"],
                         "resident_id": p["resident"]["id"], "carer": p["carer"]["first_name"], "reactions": n})
         return out
 
     @app.get("/api/record/{pid}")
-    async def record(pid: str):
+    async def record(pid: str, request: Request):
+        check_owner(request, pid)
         return enc.record(pid)
 
     @app.get("/api/qloo/log")
@@ -202,10 +228,12 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
 
     @app.post("/api/sessions")
     async def new_session(body: SessionReq, request: Request):
+        check_owner(request, body.resident, body.carer)
         return await enc.plan(body.resident, body.carer, visitor_of(request))
 
     @app.post("/api/reactions")
-    async def react(body: Reaction):
+    async def react(body: Reaction, request: Request):
+        check_owner(request, body.person_id)
         return await enc.react(body.person_id, body.item.model_dump(), body.reaction, body.carer_id, body.session_id,
                                body.note)
 
@@ -231,26 +259,34 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
         return {"ok": True}
 
     @app.post("/api/people/{pid}/favourites")
-    async def add_fav(pid: str, body: NewFavourite):
+    async def add_fav(pid: str, body: NewFavourite, request: Request):
+        check_owner(request, pid)
         return await enc.add_favourite(pid, body.label, body.kind)
 
     @app.delete("/api/people/{pid}/favourites/{fid}")
-    async def del_fav(pid: str, fid: int):
+    async def del_fav(pid: str, fid: int, request: Request):
+        check_owner(request, pid)
         enc.remove_favourite(pid, fid)
         return {"ok": True}
 
     @app.post("/api/favourites/{fid}/confirm")
-    async def confirm(fid: int, body: Confirm):
+    async def confirm(fid: int, body: Confirm, request: Request):
+        fav = enc.store.one("SELECT person_id FROM favourites WHERE id=?", (fid,))
+        if not fav:
+            raise NotFound(fid)
+        check_owner(request, fav["person_id"])
         enc.confirm_favourite(fid, body.entity_id, body.entity_name)
         return {"ok": True}
 
     @app.post("/api/people/{pid}/avoid")
-    async def avoid(pid: str, body: AvoidTag):
+    async def avoid(pid: str, body: AvoidTag, request: Request):
+        check_owner(request, pid)
         enc.add_avoid_tag(pid, body.tag_id, body.label)
         return {"ok": True}
 
     @app.delete("/api/people/{pid}/avoid/{aid}")
-    async def del_avoid(pid: str, aid: int):
+    async def del_avoid(pid: str, aid: int, request: Request):
+        check_owner(request, pid)
         enc.remove_avoid(pid, aid)
         return {"ok": True}
 
@@ -263,7 +299,9 @@ def create_app(enc: Optional[Encore] = None, warm: bool = True) -> FastAPI:
     last_reset = {"t": 0.0}
 
     @app.post("/api/demo/reset")
-    async def reset():
+    async def reset(request: Request):
+        if not from_this_machine(request):
+            raise HTTPException(403, "The demo resets itself every night at 08:00 UTC.")
         if time.time() - last_reset["t"] < 20:
             raise HTTPException(429, "The demo was reset a moment ago.")
         last_reset["t"] = time.time()
