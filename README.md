@@ -2,7 +2,7 @@
 
 **Encore is a taste agent for care-home activity coordinators.** From a birth year, a hometown and three favourites a family can name in a minute, it uses Qloo to find the songs, films and shows of each resident's youth, plans one-to-one reminiscence sessions a carer can run in ten minutes, and picks the lounge film that leaves no resident out.
 
-**Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents). **Try it with someone in your family:** https://44-199-155-121.sslip.io/add
+**Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents). **Try it with someone in your family:** https://44-199-155-121.sslip.io/add **Video (2:52):** https://youtu.be/qP-1_ScSY74
 
 > Thursday, 3 pm, the lounge at Maple Court in Evanston, Illinois. Tomasz, 89, grew up in Kraków and has said little all week. His carer, Priya, is 26 and grew up in Kochi. Encore gives her Czesław Niemen's "Dziwny jest ten świat" to open with, Maryla Rodowicz, a Polish singer nobody at the home has tried with him, Paul Anka's "Diana" as something Qloo finds both of their tastes point to, and a Polish restaurant ten kilometres away. Then it picks a film for all fourteen residents: *All That Heaven Allows* (1955, 89 minutes), the film on the shortlist that serves its least-served resident best. Asked the same question, the model on its own chose a film that resident ranks last.
 
@@ -47,6 +47,10 @@ Every pick, rank and number on screen comes from Qloo and Encore's code. Gemini 
 | Films released in the resident's ages 10 to 30 | 140/140 | 104/140 (74%) |
 | Films from the resident's home country | 86/140 (61%) | 83/140 (59%) |
 
+![Encore against the model alone](docs/figures/model_alone.png)
+
+*Every answer Encore gives exists in Qloo and falls inside the resident's ages 10 to 30. The same model asked on its own: 217 of 280 answers found in Qloo, 108 of 140 singers active and 104 of 140 films released in those years.*
+
 The lounge film, scored on one shared pool (Encore's shortlist plus the model's choice) by each resident's Qloo ranking:
 
 | Rule | Film | Least-served resident's fit | Average fit |
@@ -55,6 +59,10 @@ The lounge film, scored on one shared pool (Encore's shortlist plus the model's 
 | Highest average affinity | Guess Who's Coming to Dinner (1967) | 0.40 | 0.69 |
 | Most popular on the shortlist | Singin' in the Rain (1952) | 0.00 | 0.33 |
 | The model alone | Singin' in the Rain (1952) | 0.00 | 0.33 |
+
+![Each resident's fit for three lounge films](docs/figures/lounge_fit.png)
+
+*Each dot is one of the 14 residents, placed by where the film falls in that resident's own Qloo ranking (live demo). Encore's pick keeps its least-served resident at 0.42. The most popular film on the shortlist would leave Rosa at 0.10. Drawn by `scripts/figures.py`.*
 
 The week, on the same 14 residents and the same per-resident Qloo rankings (live demo, 16 Oct 2026):
 
@@ -134,6 +142,7 @@ Open http://127.0.0.1:8077. On first start Encore resolves the favourites and wa
 
 - Tests: `.venv/bin/python -m pytest` (33 tests, no network).
 - Evaluation: `.venv/bin/python scripts/evaluate.py` (needs both keys; writes `eval/results.json`, shown on the How it works page).
+- Figures: `.venv/bin/python scripts/figures.py` (reads `eval/results.json` and the live lounge; writes `docs/figures/`).
 - MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`, `week_plan`.
 - Deploy: `deploy/provision.sh` then `deploy/redeploy.sh` (AWS t4g.small, Caddy, keys in SSM Parameter Store).
 
