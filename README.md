@@ -140,7 +140,7 @@ python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
 Open http://127.0.0.1:8077. On first start Encore resolves the favourites and warms its cache for all residents.
 
-- Tests: `.venv/bin/python -m pytest` (33 tests, no network).
+- Tests: `.venv/bin/python -m pytest` (37 tests, no network).
 - Evaluation: `.venv/bin/python scripts/evaluate.py` (needs both keys; writes `eval/results.json`, shown on the How it works page).
 - Figures: `.venv/bin/python scripts/figures.py` (reads `eval/results.json` and the live lounge; writes `docs/figures/`).
 - MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`, `week_plan`.
