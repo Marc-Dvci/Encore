@@ -54,13 +54,14 @@ async def test_httpx_request_lines_never_carry_the_key(tmp_path, caplog):
 
 
 def test_importing_the_app_keeps_httpx_quiet():
-    for name in ("httpx", "httpcore"):
+    for name in ("httpx", "httpcore", "httpx2", "httpcore2"):
         assert logging.getLogger(name).getEffectiveLevel() >= logging.WARNING
 
 
 async def test_mounting_mcp_does_not_turn_request_logging_back_on(enc):
     create_app(enc, warm=False)
-    assert logging.getLogger("httpx").getEffectiveLevel() >= logging.WARNING
+    for name in ("httpx", "httpx2"):
+        assert logging.getLogger(name).getEffectiveLevel() >= logging.WARNING
 
 
 # ---- budgets ----------------------------------------------------------------------------------
