@@ -7,7 +7,6 @@ import hashlib
 import json
 import logging
 import time
-from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request

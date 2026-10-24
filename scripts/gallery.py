@@ -1,5 +1,6 @@
 """3:2 gallery captures (1500x1000 at 2x) of the key screens of a running Encore."""
-import asyncio, sys
+import asyncio
+import sys
 from playwright.async_api import async_playwright
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8077"
 OUT = sys.argv[2] if len(sys.argv) > 2 else "../gallery"

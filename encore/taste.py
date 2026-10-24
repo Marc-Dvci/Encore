@@ -173,8 +173,8 @@ async def shelf(store: Store, qloo: Qloo, p: dict, domain: str, limit: int = 12)
     names = _seed_names(p)
     skip = seeds | set(roster.avoid_entities(p)) | set(cooled_down(store, p["id"]))
     lanes = await lanes_for(qloo, p, domain)
-    results = await asyncio.gather(*[qloo.insights(l.params, purpose=f"{DOMAINS[domain]['label'].lower()} of their youth "
-                                                  f"({l.name} lane)") for l in lanes], return_exceptions=True)
+    results = await asyncio.gather(*[qloo.insights(lane.params, purpose=f"{DOMAINS[domain]['label'].lower()} of their youth "
+                                                  f"({lane.name} lane)") for lane in lanes], return_exceptions=True)
     per_lane: list[list[dict]] = []
     lanes_of: dict[str, list[str]] = {}
     dropped_era = 0
@@ -209,7 +209,7 @@ async def shelf(store: Store, qloo: Qloo, p: dict, domain: str, limit: int = 12)
         it["lanes"] = lanes_of.get(it["entity_id"], [])
     return {"domain": domain, "label": DOMAINS[domain]["label"], "window": window(b), "items": items[:limit],
             "considered": sum(len(r) for r in results if not isinstance(r, Exception)), "outside_era": dropped_era,
-            "lanes": [l.name for l in lanes], "errors": errors}
+            "lanes": [lane.name for lane in lanes], "errors": errors}
 
 
 def _item(e: dict, domain: str, year, year_used, birth: int, aff: float, w: float, score: float,

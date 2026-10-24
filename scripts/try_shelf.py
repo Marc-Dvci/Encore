@@ -1,4 +1,5 @@
-import asyncio, sys, json
+import asyncio
+import sys
 sys.path.insert(0, ".")
 from encore.config import load_config
 from encore.store import Store
@@ -6,8 +7,11 @@ from encore.qloo import Qloo
 from encore import roster, taste
 
 async def main(pid):
-    cfg = load_config(); store = Store(cfg.db_path); q = Qloo(cfg, store)
-    roster.load_home(store, cfg.home_file); roster.register_privacy(store, q.guard)
+    cfg = load_config()
+    store = Store(cfg.db_path)
+    q = Qloo(cfg, store)
+    roster.load_home(store, cfg.home_file)
+    roster.register_privacy(store, q.guard)
     print(await roster.resolve_pending(store, q))
     p = roster.person(store, pid)
     prof = await taste.era_profile(store, q, p, limit=8)
