@@ -78,12 +78,13 @@ class AI:
         (d / f"{key}.json").write_text(json.dumps(value, ensure_ascii=False, indent=1), encoding="utf-8")
 
     async def _generate(self, body: dict) -> dict:
-        url = (f"https://aiplatform.googleapis.com/v1/publishers/google/models/{self.model}:generateContent"
-               f"?key={self.cfg.gemini_api_key}")
+        # The key travels in a header, never in the URL, so no request log can record it.
+        url = f"https://aiplatform.googleapis.com/v1/publishers/google/models/{self.model}:generateContent"
+        headers = {"x-goog-api-key": self.cfg.gemini_api_key or ""}
         r = None
         for attempt in range(2):
             try:
-                r = await self._http.post(url, json=body)
+                r = await self._http.post(url, json=body, headers=headers)
                 if r.status_code in (429, 500, 503) and attempt == 0:
                     continue
                 break

@@ -24,6 +24,9 @@ from .service import Encore, NotFound
 
 log = logging.getLogger("encore")
 WEB = ROOT / "web" / "dist"
+# The MCP server sets the root logger to INFO, which would make httpx log every outbound request.
+for _name in ("httpx", "httpcore"):
+    logging.getLogger(_name).setLevel(logging.WARNING)
 
 
 class Present(BaseModel):
