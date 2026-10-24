@@ -1,5 +1,7 @@
 # Encore
 
+[![CI](https://github.com/Marc-Dvci/Encore/actions/workflows/ci.yml/badge.svg)](https://github.com/Marc-Dvci/Encore/actions/workflows/ci.yml)
+
 **Encore is a taste agent for care-home activity coordinators.** From a birth year, a hometown and three favourites a family can name in a minute, it uses Qloo to find the songs, films and shows of each resident's youth, plans one-to-one reminiscence sessions a carer can run in ten minutes, and picks the lounge film that leaves no resident out.
 
 **Live demo:** https://44-199-155-121.sslip.io (no login; fictional residents). **Try it with someone in your family:** https://44-199-155-121.sslip.io/add **Video (2:52):** https://youtu.be/qP-1_ScSY74
@@ -85,9 +87,9 @@ How the music lanes were tuned: across the 14 residents, Qloo artist results see
 
 ## What Qloo sees
 
-Entity IDs, a range of years, a hometown, a genre word and an age bracket. Names, rooms, care notes and reactions stay in Encore's database. The client enforces this with an allow-list ([`qloo.PrivacyGuard`](encore/qloo.py)): free-text parameters may only carry a favourite as the family typed it, a town or a genre word, every other parameter must be an ID, URN, number or country, and any value containing a resident's or carer's name is refused before it leaves. The **What Qloo saw** page lists every request. The key travels only in the `X-Api-Key` header from the server; images are fetched by the server too, because they need the key.
+Entity IDs, a range of years, a hometown, a genre word and an age bracket. Names, rooms, care notes and reactions stay in Encore's database. The client enforces this with an allow-list ([`qloo.PrivacyGuard`](encore/qloo.py)): free-text parameters may only carry a favourite as the family typed it, a town or a genre word, every other parameter must be an ID, URN, number or country, and any value containing a resident's or carer's name is refused before it leaves. The **What Qloo saw** page lists every request. The key travels only in the `X-Api-Key` header from the server; images are fetched by the server too, because they need the key. The Gemini key travels the same way, in the `x-goog-api-key` header, so no URL carries a key, and the HTTP client's request logging is off.
 
-Qloo answers are cached privately on the server (allowed by the hackathon terms) and never committed here. The tests run against a synthetic stand-in ([`tests/fake_qloo.py`](tests/fake_qloo.py)).
+Qloo answers are cached privately on the server (allowed by the hackathon terms) and never committed here. The tests run against synthetic stand-ins for Qloo ([`tests/fake_qloo.py`](tests/fake_qloo.py)) and Gemini ([`tests/fake_gemini.py`](tests/fake_gemini.py)).
 
 ## Architecture
 
@@ -116,7 +118,9 @@ flowchart LR
 | Claim | Code | Test |
 |---|---|---|
 | No name or note reaches Qloo across every feature | `encore/qloo.py` `PrivacyGuard` | `tests/test_privacy.py::test_no_name_or_note_reaches_qloo_across_every_flow` |
-| The API key never appears in a request URL or the log | `encore/qloo.py` `_fetch`, `_log` | `tests/test_privacy.py::test_api_key_travels_only_in_the_header` |
+| Neither API key appears in a request URL or a log | `encore/qloo.py` `_fetch`, `_log`; `encore/ai.py` `_generate`; `encore/app.py` | `tests/test_privacy.py::test_api_key_travels_only_in_the_header`, `tests/test_ai.py::test_httpx_request_lines_never_carry_the_key` |
+| The model is told the plan, never a care note or a family note | `encore/session.py` `_words` | `tests/test_people_and_sessions.py::test_the_model_is_told_the_plan_but_never_a_care_note_or_family_note` |
+| Model use stops at a daily cap, an hourly cap per visitor and an end date | `encore/ai.py` `why_not_live` | `tests/test_ai.py` |
 | Shelves stay inside ages 10 to 30 and honour avoid lists | `encore/taste.py` | `tests/test_taste.py` |
 | A title with several releases resolves to the one from their youth | `encore/roster.py` | `tests/test_taste.py::test_same_title_resolves_to_the_release_of_their_youth` |
 | The lounge pick maximises the least-served resident's fit | `encore/group.py` | `tests/test_group.py` |
@@ -125,7 +129,9 @@ flowchart LR
 | The week's two films are the pair whose least-served resident's better film fits best | `encore/week.py` `best_pair` | `tests/test_week_family.py::test_two_films_chosen_together_beat_the_two_best_films_taken_separately` |
 | Each carer takes at most an even share of one-to-ones, and the strongest match is kept | `encore/week.py` `assign` | `tests/test_week_family.py::test_assignment_respects_each_carers_share_and_keeps_the_strong_pair` |
 | The product keeps working on templates without the model | `encore/session.py` `_template`, `encore/agent.py` `_fallback` | `tests/test_flows.py::test_session_plan_uses_template_words_without_a_model`, `::test_agent_falls_back_to_the_matching_tool` |
-| Qloo requests retry with backoff and are served from the private cache | `encore/qloo.py` | `tests/test_flows.py` |
+| Qloo requests retry with backoff and are served from the private cache | `encore/qloo.py` | `tests/test_flows.py`, `tests/test_qloo_client.py` |
+| The agent's tools cannot write, and cannot reach someone a visitor added | `encore/agent.py` | `tests/test_agent_mcp_api.py::test_no_tool_can_write`, `::test_the_agent_cannot_reach_someone_a_visitor_added` |
+| An assistant can plan over MCP with the seven tools | `encore/mcp_server.py` | `tests/test_agent_mcp_api.py::test_mcp_lists_the_seven_tools`, `::test_an_assistant_can_plan_over_mcp` |
 
 ## Run it
 
@@ -133,14 +139,15 @@ Requires Python 3.11+ and Node 20+.
 
 ```sh
 cp .env.example .env            # add QLOO_API_KEY; GEMINI_API_KEY is optional
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-(cd web && npm install && npm run build)
+python -m venv .venv && .venv/bin/pip install -r requirements-dev.txt -c constraints.txt
+(cd web && npm ci && npm run build)
 .venv/bin/uvicorn encore.app:create_app --factory --port 8077
 ```
 
 Open http://127.0.0.1:8077. On first start Encore resolves the favourites and warms its cache for all residents.
 
-- Tests: `.venv/bin/python -m pytest` (37 tests, no network).
+- Tests: `.venv/bin/python -m pytest` (373 tests, no network, no keys). Lint: `.venv/bin/ruff check .`. CI runs both on Python 3.11 and 3.12 and builds the web app on every push.
+- Dependencies are pinned: `requirements.txt` (direct), `constraints.txt` (every package on the live server), `web/package-lock.json`.
 - Evaluation: `.venv/bin/python scripts/evaluate.py` (needs both keys; writes `eval/results.json`, shown on the How it works page).
 - Figures: `.venv/bin/python scripts/figures.py` (reads `eval/results.json` and the live lounge; writes `docs/figures/`).
 - MCP over stdio: `python -m encore.mcp_server`. Over HTTP: `POST /mcp/` on the running server. Tools: `list_people`, `resident_profile`, `lounge_film`, `music_hour`, `plan_one_to_one`, `common_ground`, `week_plan`.
