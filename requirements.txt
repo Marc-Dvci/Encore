@@ -1,5 +1,7 @@
-fastapi>=0.115
-uvicorn[standard]>=0.32
-pydantic>=2.9
-httpx>=0.27
-mcp>=2.0
+# Direct dependencies, pinned to the versions the live server runs.
+# Every transitive version is pinned in constraints.txt: pip install -r requirements.txt -c constraints.txt
+fastapi==0.143.2
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+httpx==0.28.1
+mcp==2.3.0

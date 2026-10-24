@@ -18,7 +18,7 @@ rsync -a --delete --exclude var/ --exclude .venv/ "$SRC/" $APP/
 mkdir -p $APP/var
 [ -x $APP/.venv/bin/python ] || python3.11 -m venv $APP/.venv
 $APP/.venv/bin/pip install -q --upgrade pip
-$APP/.venv/bin/pip install -q -r $APP/requirements.txt
+$APP/.venv/bin/pip install -q -r $APP/requirements.txt -c $APP/constraints.txt
 chown -R encore:encore $APP
 
 if [ ! -x /usr/local/bin/caddy ]; then
